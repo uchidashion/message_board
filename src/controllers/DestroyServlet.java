@@ -49,6 +49,8 @@ public class DestroyServlet extends HttpServlet {
             em.remove(m);
             //変更した内容を確定
             em.getTransaction().commit();
+            //フラッシュメッセージを送信
+            request.getSession().setAttribute("flush", "削除が完了しました。");
             //DBの接続切断
             em.close();
 

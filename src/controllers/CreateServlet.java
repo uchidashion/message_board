@@ -59,6 +59,8 @@ public class CreateServlet extends HttpServlet {
             em.persist(m);
             //データの新規登録の確定
             em.getTransaction().commit();
+            //フラッシュメッセージを送信
+            request.getSession().setAttribute("flush", "登録が完了しました。");
             //DBの接続を切断
             em.close();
 

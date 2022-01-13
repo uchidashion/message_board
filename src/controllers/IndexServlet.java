@@ -33,11 +33,11 @@ public class IndexServlet extends HttpServlet {
      * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-    	//EntityManagerのオブジェクトを作成
-    	EntityManager em = DBUtil.createEntityManager();
+        //EntityManagerのオブジェクトを作成
+        EntityManager em = DBUtil.createEntityManager();
 
-    	//複数件データベースに問い合わせ
-    	//その結果をリスト形式で取得
+        //複数件データベースに問い合わせ
+        //その結果をリスト形式で取得
         List<Message> messages = em.createNamedQuery("getAllMessages", Message.class).getResultList();
 
         //接続とじる
@@ -45,6 +45,13 @@ public class IndexServlet extends HttpServlet {
 
         //取得したデータをリクエストスコープに保存
         request.setAttribute("messages", messages);
+
+        //フラッシュメッセージがセッションスコープにセットされていたら
+        //リクエストスコープに保存する（セッションスコープから削除）
+        if(request.getSession().getAttribute("flush") != null) {
+            request.setAttribute("flush", request.getSession().getAttribute("flush"));
+            request.getSession().removeAttribute("flush");
+        }
 
         //index.jspを呼び出す
         RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/messages/index.jsp");
