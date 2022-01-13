@@ -33,15 +33,20 @@ public class IndexServlet extends HttpServlet {
      * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
      */
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        //response.getWriter().append("Served at: ").append(request.getContextPath());
-        EntityManager em = DBUtil.createEntityManager();
+    	//EntityManagerのオブジェクトを作成
+    	EntityManager em = DBUtil.createEntityManager();
 
+    	//複数件データベースに問い合わせ
+    	//その結果をリスト形式で取得
         List<Message> messages = em.createNamedQuery("getAllMessages", Message.class).getResultList();
 
+        //接続とじる
         em.close();
 
+        //取得したデータをリクエストスコープに保存
         request.setAttribute("messages", messages);
 
+        //index.jspを呼び出す
         RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/messages/index.jsp");
         rd.forward(request, response);
 
