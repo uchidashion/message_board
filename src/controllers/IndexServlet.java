@@ -44,9 +44,9 @@ public class IndexServlet extends HttpServlet {
 
         // 最大件数と開始位置を指定してメッセージを取得
         List<Message> messages = em.createNamedQuery("getAllMessages", Message.class)
-                                   .setFirstResult(15 * (page - 1))
-                                   .setMaxResults(15)
-                                   .getResultList();
+                                   .setFirstResult(15 * (page - 1))  //何件目からデータを取得するか
+                                   .setMaxResults(15)  //データの最大取得
+                                   .getResultList();  //問い合わせ結果をリスト形式で取得
 
         // 全件数を取得
         long messages_count = (long)em.createNamedQuery("getMessagesCount", Long.class)

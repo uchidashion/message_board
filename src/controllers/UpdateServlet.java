@@ -2,8 +2,10 @@ package controllers;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -11,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import models.Message;
+import models.validators.MessageValidators;
 import utils.DBUtil;
 
 /**
@@ -54,24 +57,37 @@ public class UpdateServlet extends HttpServlet {
             Timestamp currentTime = new Timestamp(System.currentTimeMillis());
             m.setUpdated_at(currentTime);
 
-            //データベースに登録を始める
-            em.getTransaction().begin();
-            //データベースの変更を確定する
-            em.getTransaction().commit();
-            //フラッシュメッセージを送信
-            request.getSession().setAttribute("flush", "更新が完了しました。");
-            //DBの接続切断
-            em.close();
+            //バリデーションを実行してエラーがあったら編集画面のフォームに戻る
+            List<String> errors = MessageValidators.validate(m);
+            if(errors.size() > 0) {
+                //DBの接続切断
+                em.close();
 
-            //セッションスコープ上の不要になったデータの削除
-            request.getSession().removeAttribute("message_id");
+                //フォームに初期値を設定、さらにエラーメッセージを送る
+                request.setAttribute("_token", request.getSession().getId());
+                request.setAttribute("message", m);
+                request.setAttribute("errors", errors);
 
-            //indexページへリダイレクト
-            response.sendRedirect(request.getContextPath() + "/index");
+                //new.jspを呼び出す
+                RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/messages/new.jsp");
+                rd.forward(request, response);
+
+            }else {
+                //データベースに登録を始める
+                em.getTransaction().begin();
+                //データベースの変更を確定する
+                em.getTransaction().commit();
+                //フラッシュメッセージを送信
+                request.getSession().setAttribute("flush", "更新が完了しました。");
+                //DBの接続切断
+                em.close();
+
+                //セッションスコープ上の不要になったデータの削除
+                request.getSession().removeAttribute("message_id");
+
+                //indexページへリダイレクト
+                response.sendRedirect(request.getContextPath() + "/index");
+            }
         }
-
-
-
     }
-
 }

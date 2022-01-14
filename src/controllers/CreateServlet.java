@@ -2,8 +2,10 @@ package controllers;
 
 import java.io.IOException;
 import java.sql.Timestamp;
+import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -11,6 +13,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import models.Message;
+import models.validators.MessageValidators;
 import utils.DBUtil;
 
 /**
@@ -55,17 +58,34 @@ public class CreateServlet extends HttpServlet {
             m.setCreated_at(currentTime);
             m.setUpdated_at(currentTime);
 
-            //データベースに保存
-            em.persist(m);
-            //データの新規登録の確定
-            em.getTransaction().commit();
-            //フラッシュメッセージを送信
-            request.getSession().setAttribute("flush", "登録が完了しました。");
-            //DBの接続を切断
-            em.close();
+            //バリデーションを実行してエラーがあったら新規登録のフォームに戻る
+            List<String> errors = MessageValidators.validate(m);
+            if(errors.size() > 0) {
+                //DBの接続切断
+                em.close();
 
-            //index.Servletに遷移
-            response.sendRedirect(request.getContextPath() + "/index");
+                //フォームに初期値を設定、さらにエラーメッセージを送る
+                request.setAttribute("_token", request.getSession().getId());
+                request.setAttribute("message", m);
+                request.setAttribute("errors", errors);
+
+                //new.jspを呼び出す
+                RequestDispatcher rd = request.getRequestDispatcher("/WEB-INF/views/messages/new.jsp");
+                rd.forward(request, response);
+
+            }else {
+                //データベースに保存
+                em.persist(m);
+                //データの新規登録の確定
+                em.getTransaction().commit();
+                //フラッシュメッセージを送信
+                request.getSession().setAttribute("flush", "登録が完了しました。");
+                //DBの接続を切断
+                em.close();
+
+                //index.Servletに遷移
+                response.sendRedirect(request.getContextPath() + "/index");
+            }
         }
     }
 
